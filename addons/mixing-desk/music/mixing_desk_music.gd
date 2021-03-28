@@ -1,5 +1,12 @@
 extends Node
 
+# Note: usually, we clone a track before we play it (and then delete after it finishes),
+# except for rollover, concat, autofade and autolayer
+
+# TODO:
+# * write fade* and un-/mute funcs for all of this bus (usually called "Music")
+# * write fade* and un-/mute funcs that support other containers
+
 # taken from current Song
 var tempo : int = 0
 var bars : int = 0
@@ -208,8 +215,9 @@ func quickplay(song_name : String):
 	play(song_name)
 
 
-# sets bar and beat transitions to FALSE
-# handles all containers, except for core and rollover
+# sets bar and beat transitions to FALSE.
+# handles all containers, except for core and rollover.
+# tracks in concat and autolayer containers are not cloned, they are played directly
 func _play_overlays(song_index : int):
 	for container in songs[song_index].get_children():
 		if container.cont == "ran":
@@ -267,6 +275,12 @@ func fade_in(song_name : String, track_name : String):
 
 
 func _fade_in(song_index : int, track_index : int):
+	# TODO: add bool for "include_overlays": the tracks from core are only used in next loop (if any)
+	# use "for track in get_node("OverlayRoot").get_children():"
+	# but we can't rely on track_index (because it's the index in core container -> not valid in OverlayRoot)
+
+	# fade out currently NOT playing tracks
+	# so in case they are used again BEFORE the tween finished: the next run won't be in full volume or muted
 	var track = songs[song_index]._get_core().get_child(track_index)
 	var tween = track.get_node("Tween")
 	var in_from = track.get_volume_db()
@@ -285,16 +299,22 @@ func fade_out(song_name : String, track_name : String):
 
 
 func _fade_out(song_index : int, track_index : int):
+	# TODO: add bool for "include_overlays": the tracks from core are only used in next loop (if any)
+	# use "for track in get_node("OverlayRoot").get_children():"
+	# but we can't rely on track_index (because it's the index in core container -> not valid in OverlayRoot)
+
+	# fade out currently NOT playing tracks
+	# so in case they are used again BEFORE the tween finished: the next run won't be in full volume
 	var track = songs[song_index]._get_core().get_child(track_index)
 	var tween = track.get_node("Tween")
 	var in_from = track.get_volume_db()
 	tween.interpolate_property(track, 'volume_db', in_from, -60.0, transition_beats, Tween.TRANS_SINE, Tween.EASE_OUT)
 	tween.start()
-	tween.connect("tween_completed", self, "_fade_to_mute", [song_index, track_index])
+	tween.connect("tween_completed", self, "_mute_fadedout", [song_index, track_index])
 
 
 # after fading, add track to muted tracks
-func _fade_to_mute(object : Object, key : NodePath, song_index : String, track_index : String):
+func _mute_fadedout(object : Object, key : NodePath, song_index : String, track_index : String):
 	var pos = songs[song_index].muted_tracks.find(track_index)
 	if pos == null:
 		songs[song_index].muted_tracks.append(track_index)
@@ -340,7 +360,7 @@ func fadeout_below_track(song_name : String, track_name : String):
 	if track_index <= 0:
 		return
 
-	for i in range(0, track_index + 1):
+	for i in range(0, track_index):
 		_fade_out(song_index, i)
 
 
@@ -374,7 +394,7 @@ func fadein_below_track(song_name : String, track_name : String):
 	if track_index <= 0:
 		return
 
-	for i in range(track_index + 1, track_count):
+	for i in range(0, track_index):
 		_fade_in(song_index, i)
 
 
@@ -385,6 +405,12 @@ func mute(song_name : String, track_name : String):
 
 
 func _mute(song_index : int, track_name : String):
+	# TODO: add bool for "include_overlays": the tracks from core are only used in next loop (if any)
+	# use "for track in get_node("OverlayRoot").get_children():"
+	# but we can't rely on track_index (because it's the index in core container -> not valid in OverlayRoot)
+
+	# mute currently NOT playing tracks
+	# so in case they are used again BEFORE the tween finished: the next run won't be in full volume
 	var track_index = _get_track_index(song_index, track_name)
 	var track = songs[song_index]._get_core().get_child(track_index)
 	track.set_volume_db(-60.0)
@@ -400,11 +426,17 @@ func unmute(song_name : String, track_name : String):
 
 
 func _unmute(song_index : int, track_name : String):
+	# TODO: add bool for "include_overlays": the tracks from core are only used in next loop (if any)
+	# use "for track in get_node("OverlayRoot").get_children():"
+	# but we can't rely on track_index (because it's the index in core container -> not valid in OverlayRoot)
+
+	# unmute currently NOT playing tracks
+	# so in case they are used again BEFORE the tween finished: the next run will be in full volume
 	var track_index = _get_track_index(song_index, track_name)
 	var track = songs[song_index]._get_core().get_child(track_index)
 	track.set_volume_db(default_decibel)
 	var pos = songs[song_index].muted_tracks.find(track_index)
-	if pos != -1:
+	if pos >= 0 && pos < songs[song_index].muted_tracks.size():
 		songs[song_index].muted_tracks.remove(pos)
 
 
@@ -481,6 +513,12 @@ func queue_sequence(sequence : Array, type : String, on_end : String):
 
 # unload and stops the current song, then initialises and plays the new one
 # all tracks in CoreContainer are faded out. Besides that: all tracks not in a RolloverContainer are stopped immediately
+# not another track of the old Song's RolloverContainer will be played
+func change_song(song_name : String):
+	var song_index = _get_song_index(song_name)
+	_change_song(song_index)
+
+
 func _change_song(song_index : int):
 	old_song_index = current_song_index
 	if song_index != current_song_index:
@@ -491,7 +529,7 @@ func _change_song(song_index : int):
 				if songs[old_song_index].transition_beats >= 1:
 					for track in container.get_child_count():
 						_fade_out(old_song_index, track)
-			elif container.cont != "rollover":
+			elif container.cont != "rollover": # rollover is not necessary, because we reset it _init_song()
 				for track in container.get_children():
 					if track.playing:
 						track.stop()
@@ -513,16 +551,19 @@ func _track_faded(object : Object, key : NodePath, track : Node):
 	track.queue_free()
 
 
-# stops playing given song
+# stops playing given song. Fades out currently playing overlays.
 # if any track is looping -> set track_node.stream.loop to FALSE (is this desired?)
+# TODO: add option to stop immediately
 func stop(song_name : String):
 	var song_index = _get_song_index(song_name)
 	if playing:
 		playing = false
 		for track in songs[song_index]._get_core().get_children():
-			track.stop()
 			track.stream.loop = false
-			_fade_out_overlay(track.name) # this is only if track is currently used as an overlay; TODO: optimize
+			 # in case the track is currently used as an overlay
+			_fade_out_overlay(track.name)
+		# TODO: fade/stop non-overlays (rollover, concat, autofade and autolayer)
+		# but we can't rely on track_index (because it's the index in core container -> not valid in OverlayRoot)
 
 
 # fade out overlay (if it exists)
@@ -581,7 +622,7 @@ func _bar():
 
 
 # called every beat:
-# * plays random rollover track if the current beat equals rollover_point
+# * plays random rollover track (is not cloned) if the current beat equals rollover_point
 func _beat():
 	if beat_tran:
 		if current_song_index != new_song_index:
