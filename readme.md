@@ -1,4 +1,4 @@
-# Godot Mixing Desk 2.12.1
+# Godot Mixing Desk 3.0
 
 The Mixing Desk is a complete audio solution for the Godot Engine.
 Godot already ships with some awesome audio capabilities - namely the bus system which is so intuitive for audio.
@@ -27,7 +27,7 @@ Create a MixingDeskMusic, and place Song nodes for each of your songs, similar t
 If you don't know the tempo of the music you're using, ask the composer. If you don't know the composer, check the website where you downloaded the music, or the readme in the sample pack you downloaded. If in doubt, try out BPM detection software such as here: https://www.conversion-tool.com/bpmdetector/?lang=en
 Similar process for bars and beats in bar - but beats in bar will, most of the time, be 4, sometimes 3.
 Transition beats is how long the fadeout should be when changing song or stopping. And auto-transition is useful for a codeless approach to adaptive music: point the song at the node which contains the desired signal, name the signal, and the song will be queued for transition when the signal is emitted. Transition type can be either beat or bar.
-Each song can also be routed to its own bus, if desired. By default, it is set to "Music". Mixing Desk will automatically create the named bus if it does not exist, upon running the game, and route the audio to that bus. If this bus isn't "Music", the bus will be routed to "Music".
+Each song can also be routed to its own bus, if desired. By default, it is set to "Music". If no valid bus is set, the respective Song can't be played.
 
 >TIP: All full-length tracks (I.E. all tracks but Concat and Rollover) may extend over the bar length of the track, allowing reverb/delay/decay tails. This ensures smoother looping with instruments that sound out after the play is finished.
 

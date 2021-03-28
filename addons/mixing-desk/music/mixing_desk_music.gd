@@ -16,7 +16,7 @@ var transition_beats : float = 0.0
 # once/shuffle/loop
 var can_shuffle : bool = true
 
-enum play_style {play_once, loop_once, shuffle, endless_shuffle, endless_loop}
+enum play_style {play_once, loop_song, shuffle, endless_shuffle, loop_song_mix}
 export(play_style) var play_mode
 export(bool) var autoplay = false
 export(NodePath) var autoplay_song # is played automatically, if autoplay is true on _ready()
@@ -51,6 +51,7 @@ signal bar_changed
 signal core_loop_finished
 signal shuffle
 signal song_changed
+
 
 func _ready():
 	randomize() # according to Godot Doku: only call this once in _ready()
@@ -143,11 +144,26 @@ func _init_song(song_index : int):
 			rollover = null
 
 
+# returns an empty String, if no Song is initialized.
+# call song_is_playing() to check if song is actually playing.
+func get_current_song_name():
+	if current_song_index < 0 || current_song_index >= songs.size():
+		return ""
+
+	return songs[current_song_index].name
+
+
+func song_is_playing():
+	return playing
+
+
 # start a song with only one track playing in default volume.
 # the others are muted, but are also running
 func play_with_solo_opening(song_name : String, track_name : String):
 	var song_index = _get_song_index(song_name)
 	var track_index = _get_track_index(song_index, track_name)
+
+	# TODO: check against _init_song(), some logic is missing
 
 	current_song_index = song_index
 	current_song_core_container = songs[song_index]._get_core()
@@ -582,7 +598,7 @@ func _fade_out_overlay(overlay_name : String):
 func _core_finished():
 	emit_signal("core_loop_finished", songs[current_song_index].name)
 	match play_mode:
-		1: # loop_once
+		1: # loop_song
 			bar = 1
 			beat = 1
 			last_beat = -1
@@ -595,7 +611,7 @@ func _core_finished():
 		3: # endless_shuffle
 			shuffle_songs()
 			return
-		4: # endless_loop
+		4: # loop_song_mix
 			var new_song_index : int
 			if current_song_index == (get_child_count() - 3):
 				new_song_index = 0
