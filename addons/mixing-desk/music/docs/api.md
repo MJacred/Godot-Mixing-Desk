@@ -19,12 +19,25 @@ MixingDeskMusic
 ```
 
 
+Requirements
+------------
+
+* on import of audio files, disable `loop`
+
+
 Limitations
 -----------
 
+* length of track `TODO`: overlay tracks must be of equal length or shorter than the first track in CoreContainer
+  * overlay containers: RanContainer, SeqContainer
+    * currently, Concat* and Rollover* are not implemented as overlays (i.e. no clones)
 * Playing more than one Song at a time will break this setup.
 * all fading and muting logic only applies to the tracks in the CoreContainer (except if stated otherwise below, e.g. `stop()`)
   * and, for now, is only applied on their next usage/loop (i.e. no immediate effect)
+* supported audio files: wav, ogg
+  * mp3 comes with Godot 3.3
+  * use * for sound effects and tracks in RolloverContainer, *
+  * use * for music
 
 
 Signals
@@ -48,16 +61,33 @@ Modes & Types
 -------------
 
 Mixing Desk Music
-* on `endless_loop`
-  * stops any tracks in a RolloverContainer
-  * fades out overlays and currently playing tracks in CoreContainer
-* `TODO`: play_once, loop_once, shuffle, endless_shuffle
+* on `play_once`
+  * plays song once
+* on `loop_song`
+  * plays the same song over and over, until you decide to stop or transition to another, which will then start looping
+* on `loop_song_mix`
+  * plays all songs in the mix in order of their appearance in the tree
+  * in detail:
+    * stops any tracks in a RolloverContainer
+    * fades out overlays and currently playing tracks in CoreContainer
+* on `shuffle`
+  * play a random song, silence for 2-3 secs (random), then play another random one
+* on `endless_shuffle`
+  * seamlessly shuffle between all songs in the mix
 
 AutoLayer: Play Modes
-* `TODO`: additive, single, pad
+* on `additive`
+  * fade in all tracks below a certain index, and fade out all above
+* on `single`
+  * fade in only a single one of the tracks
+* on `pad`
+  * fade in tracks around the chosen index
 
 AutoFade
-* `TODO`: random, all
+* on `random`
+  * randomly selected single track to play
+* on `all`
+  * play all tracks
 
 
 Transitions
@@ -80,6 +110,16 @@ func init_song(song_name : String)
 ```gdscript
 # play a song
 func play(song_name : String)
+```
+
+```gdscript
+# returns an empty String, if no Song is initialized.
+# call song_is_playing() to check if song is actually playing.
+func get_current_song_name()
+```
+
+```gdscript
+func song_is_playing()
 ```
 
 ```gdscript
