@@ -43,7 +43,7 @@ Overlays are set up in much the same way as core tracks. Create a RandomContaine
 	
 SeqContainers play the audio nodes in order, from top to bottom, and over again. Overlays must be equal length or shorter than the corresponding core tracks.
 
-Use a ConcatContainer for a group of short tracks, particularly percussion, that you wish to play in random order over the top of the song. These tracks will be chosen randomly and each will immediately follow the previous. Good for randomising drums by the measure, or whichever length samples you choose to throw in.
+Use a ConcatContainer for a group of short tracks, particularly percussion, that you wish to play in random order over the top of the song. These tracks will be chosen randomly and each will immediately follow the previous. Good for randomizing drums by the measure, or whichever length samples you choose to throw in.
 
 Rollovers are semi-transitions within a loop. Think of a crash roll, or snare rush, or any build-up/wind-down clip that may "roll over" from near the end of your clip, to after the start of the next loop. Place a RolloverContainer and add 1 or more rollover clips beneath it, and edit the `crossover beat` with the beat number of the clip that should line up with the first beat after looping. If the clip is 9 beats long, and the apex of its climb, or timing of its impact, is on beat 5 - the number is 5. Remember, count from 0, otherwise it will be thrown off.
 
@@ -72,14 +72,14 @@ First, pick a play mode. It's a property of the MDM node.
 	note: all vertical/horizontal adaptive features are available in all play modes!
 
 To have a song play first thing, you can easily set the `autoplay` export variable in MDM. Choose which song you'd like to autoplay, and you're ready to go. Otherwise, you can easily call it in code at the appropriate moment for your song to begin. To do this, simply call `init_song(song)` to load the track ready to play.
-Then, call `play(song)` - track in both cases being either the name of the song node you wish to play, or its index, counting from 0. Either will work, though names are easier for us humans to remember, while index numbers are easier to do maths on - it's your call. To quickly initialise and play in one, call `quickplay(song)`.
+Then, call `play(song)` - track in both cases being either the name of the song node you wish to play, or its index, counting from 0. Either will work, though names are easier for us humans to remember, while index numbers are easier to do maths on - it's your call. To quickly initialize and play in one, call `quickplay(song)`.
 
 ### Adapting the music
 
 Based on implementations of interactive music in [FMOD](https://www.fmod.com/) and [Wwise](https://www.audiokinetic.com/products/wwise/),  the MDM neatly covers the two major branches of adaptive music outlined by [Michael Sweet](https://www.designingmusicnow.com/2016/06/13/advantages-disadvantages-common-interactive-music-techniques-used-video-games/). 
 
 ### **Vertical Remixing/Layering**
-MDM can fade individual tracks in and out using the `fade_in(track)` or `fade_out(track)` functions. It can also fade multiple tracks in/out at once with the `mute_below_layer(track)` and `mute_above_layer(track)` functions. Fading and muting both have toggles, too - `toggle_fade(song, track)` and `toggle_mute(song, track)`. To begin a track with a base layer only, the `start_alone(track, layer)` function can be used.
+MDM can fade individual tracks in and out using the `fade_in(track)` or `fade_out(track)` functions. It can also fade multiple tracks in/out at once with the `mute_below_layer(track)` and `mute_above_layer(track)` functions. Fading and muting both have toggles, too - `toggle_fade(song, track)` and `toggle_mute(song, track)`. To begin a track with a base layer only, the `play_with_solo_opening(track, layer)` function can be used.
 
 [Video Example](https://streamable.com/csjyi)
 
@@ -127,8 +127,8 @@ song_changed(old_song_num : int, new_song_num : int)
 
 # Mixing Desk: Sound
 
-The MDS is a fully-featured sound-playing plugin, allowing procedural playback of multiple layered and combined sounds through the use of handy containers that each treat their nested sounds in a different way. But there's no need to remember any special functions - just like AudioStreamPlayers, all MDS sound contianers can be started and stopped using `play()` and `stop()`. They can, of course, also be autostarted using the export variable `autoplay`.
-Each SoundContainer has similar properties, but they behave in different ways. For example, all containers have the option to randomise pitch and volume, and will all play instanced (to alleviate sound-replay fatigue which is so common when repeating the same sound effect over and over). They also all have the option to spawn under a different node, using the `spawn-node` export. Their behaviour is, as noted, the key difference. Their functions are detailed below.
+The MDS is a fully-featured sound-playing plugin, allowing procedural playback of multiple layered and combined sounds through the use of handy containers that each treat their nested sounds in a different way. But there's no need to remember any special functions - just like AudioStreamPlayers, all MDS sound containers can be started and stopped using `play()` and `stop()`. They can, of course, also be autostarted using the export variable `autoplay`.
+Each SoundContainer has similar properties, but they behave in different ways. For example, all containers have the option to randomize pitch and volume, and will all play instanced (to alleviate sound-replay fatigue which is so common when repeating the same sound effect over and over). They also all have the option to spawn under a different node, using the `spawn-node` export. Their behaviour is, as noted, the key difference. Their functions are detailed below.
 
 
 ### Setting up MDS
@@ -142,7 +142,7 @@ MDS is slightly different to MDM - there are still container nodes, but no paren
 - `MultiSoundContainer` can contain any of the other containers, or AudioStreamPlayers, and will play all nodes nested within.
 
 And, similar to the AudioStreamPlayers found natively in Godot, there is a Node (no position), 2D, and 3D type for each container.
-To play a container, simply call `play()`! 
+To play a container, simply call `play()`!
 
 ![A PolySoundContainer](https://i.imgur.com/xkDToeA.png)
 

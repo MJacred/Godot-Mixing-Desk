@@ -59,7 +59,7 @@ There are two types of transition - switching to another song (also known as hor
 
 Like last time, I've provided some sample music to use in this tutorial, to demonstrate these very functions. You can download the sample music here: https://www.sendspace.com/file/dpqnrd
 
-Switching directly to another song is especially useful to mark states or areas in a game. For example, you may want one song to play inside a town, but a different song to play in a shop inside that town. Or you may want the music to change from ambient to battle, when the player enters a battle in your game. Both of these implementations may sound familiar if you've ever played a Pokémon game (or, really, one of most RPGs), and both implementations are easily supported by Mixing Desk.
+Switching directly to another song is especially useful to mark states or areas in a game. For example, you may want one song to play inside a town, but a different song to play in a shop inside that town. Or you may want the music to change from ambient to battle, when the player enters a battle in your game. Both of these implementations may sound familiar if you've ever played a Pokï¿½mon game (or, really, one of most RPGs), and both implementations are easily supported by Mixing Desk.
 
 To demonstrate, let's first get a simple song set up in Godot. If you use the project from the last tutorial, then you'll have the epiano ready to go. You'll just need to add another track into the Core container. The "arp" included in the sample music will work nicely. If you run the scene now, you have both the epiano and arp playing together, with some random tracks thrown in. You can keep or delete the random tracks for now, they won't be important during this tutorial. The tracks for a second song are also included in the demo music, so go ahead and set these up in their own song/core container heirarchy under MDM.
 
@@ -89,7 +89,7 @@ YT link: https://youtu.be/a5eJy-092e0
 
 In this tutorial, we'll be looking at the most advanced features of Mixing Desk. These are the parameter binds, procedural/randomised music, rollovers, MDM signalling and communication and connecting the MDM to the game to use beat and bar signals. We'll start with parameter binds, because it's probably the most complex feature, and it'll be good to get it out of the way.
 
-Firstly, you need a parameter to bind to - this can be just about anything. Distance between the player sprite and an enemy sprite, height of your character, amount of resources - anything that can have a numerical value attached, and has a fixed range between a minimum and a determined maximum. For this example, I'm going to use the height of the mouse cursor - the minimum in this case will be 0, and the maximum will be 600. To get things moving, I'll simply have to call the bind_to_param() function, pass in a track reference, and an initial value. I want to affect the epiano track, so I pass in "epiano1" for this value, and I'll also initialise it at 0.
+Firstly, you need a parameter to bind to - this can be just about anything. Distance between the player sprite and an enemy sprite, height of your character, amount of resources - anything that can have a numerical value attached, and has a fixed range between a minimum and a determined maximum. For this example, I'm going to use the height of the mouse cursor - the minimum in this case will be 0, and the maximum will be 600. To get things moving, I'll simply have to call the bind_to_param() function, pass in a track reference, and an initial value. I want to affect the epiano track, so I pass in "epiano1" for this value, and I'll also initialize it at 0.
 
 The volume value has to be normalised between 0 and 1 - 1 being full volume, and 0 being silent. To do this, you'll just have to divide the value by the maximum possible value. If the minimum is 0, leave it at that, but if the minimum is any higher, you'll also need to add this minimum to the value before dividing by max. For example:
 
@@ -115,12 +115,12 @@ You can, of course, have multiple instances of MDM in your game. You can have th
 MDM emits 5 signals situationally:
 
 `beat [beat_number]`
-`bar [bar_number]`
-`song_changed [new_song]`
-`end`
-`shuffle`
+`bar_changed [bar_number]`
+`song_changed [old_song_name, new_song_name]`
+`core_loop_finished [finished_song_name]`
+`shuffle [old_song_name, new_song_name]`
 
-These signals can be connected into your game for use in many ways. One way is to update certain values per beat or bar - or trigger, defer, or manipulate actions based on the value of beat, bar and song - which we'll get to later. Another way this can be used is to communicate between instances of MDM. Perhaps you have one-shots in MDM1, while MDM2 is full of shuffle tracks. MDM2 will likely be playing most of the time, with MDM1 only needing to play once in a while. To switch between MDM instances by the bar, insert in your game's code a yield($MDM, "bar"), followed by a stop() call on MDM2, and a quickplay() call on MDM1, after the triggering event, which could be a victory, a loss, or any number of things. Then, on MDM1's end signal, you can easily tell MDM2 to continue playing.
+These signals can be connected into your game for use in many ways. One way is to update certain values per beat or bar - or trigger, defer, or manipulate actions based on the value of beat, bar and song - which we'll get to later. Another way this can be used is to communicate between instances of MDM. Perhaps you have one-shots in MDM1, while MDM2 is full of shuffle tracks. MDM2 will likely be playing most of the time, with MDM1 only needing to play once in a while. To switch between MDM instances by the bar, insert in your game's code a yield($MDM, "bar"), followed by a stop() call on MDM2, and a quickplay() call on MDM1, after the triggering event, which could be a victory, a loss, or any number of things. Then, on MDM1's `core_loop_finished` signal, you can easily tell MDM2 to continue playing.
 
 As briefly mentioned earlier, the beat and bar signals can be useful in their own right, without being related to musical transitions. For some nice game detail, showing off musicality, you can trigger animations, light changes, or any number of things with these signals. As an example, here is the musical beat making the Godot icon dance, and the bar changing its colour. As you can see in the code, it is just a case of connecting the signal, and programming the desired effect in the function.
 
