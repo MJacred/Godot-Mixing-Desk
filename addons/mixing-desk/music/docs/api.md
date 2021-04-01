@@ -68,6 +68,7 @@ Mixing Desk Music
   * plays the same song over and over, until you decide to stop or transition to another, which will then start looping
 * on `loop_song_mix`
   * plays all songs in the mix in order of their appearance in the tree
+  * uses `func change_song()` internally
   * in detail:
     * stops any tracks in a RolloverContainer
     * fades out overlays and currently playing tracks in CoreContainer
@@ -114,13 +115,23 @@ func play(song_name : String)
 ```
 
 ```gdscript
+func get_current_song() -> Song
+```
+
+```gdscript
 # returns an empty String, if no Song is initialized.
-# call song_is_playing() to check if song is actually playing.
+# call song_is_playing() or is_playing() to check if song is actually playing.
 func get_current_song_name() -> String
 ```
 
 ```gdscript
-func song_is_playing() -> bool
+func is_playing() -> bool
+```
+
+```gdscript
+# returns false if given song is not playing.
+# also returns false, if given song is unknown.
+func song_is_playing(song_name : String) -> bool
 ```
 
 ```gdscript
@@ -143,11 +154,13 @@ func play_with_solo_opening(song_name : String, track_name : String)
 
 ```gdscript
 # slowly bring in the specified track
+# fadein uses: Tween.TRANS_QUAD, Tween.EASE_OUT
 func fade_in(song_name : String, track_name : String)
 ```
 
 ```gdscript
 # slowly take out the specified track
+# fadeout uses: Tween.TRANS_SINE, Tween.EASE_OUT
 func fade_out(song_name : String, track_name : String)
 ```
 
@@ -198,16 +211,19 @@ func toggle_fade(song_name : String, track_name : String)
 
 ```gdscript
 # change to the specified song at the next bar
+# uses `func change_song()` internally
 func queue_bar_transition(song_name : String)
 ```
 
 ```gdscript
 # change to the specified song at the next beat
+# uses `func change_song()` internally
 func queue_beat_transition(song_name : String)
 ```
 
 ```gdscript
 # play two tracks in order, either ending, looping or shuffling on the second
+# uses `func change_song()` internally
 func queue_sequence(sequence : Array, type : String, on_end : String):
 ```
 
@@ -220,5 +236,6 @@ func stop(song_name : String)
 # choose new song randomly
 # * stops any tracks in a RolloverContainer
 # * fades out overlays and currently playing tracks in CoreContainer
+# uses `func change_song()` internally
 func shuffle_songs()
 ```
