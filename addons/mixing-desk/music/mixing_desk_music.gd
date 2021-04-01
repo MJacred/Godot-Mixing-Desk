@@ -146,14 +146,14 @@ func _init_song(song_index : int):
 
 # returns an empty String, if no Song is initialized.
 # call song_is_playing() to check if song is actually playing.
-func get_current_song_name():
+func get_current_song_name() -> String:
 	if current_song_index < 0 || current_song_index >= songs.size():
 		return ""
 
 	return songs[current_song_index].name
 
 
-func song_is_playing():
+func song_is_playing() -> bool:
 	return playing
 
 
@@ -174,7 +174,7 @@ func play_with_solo_opening(song_name : String, track_name : String):
 
 
 # copy given track, play, then remove it as soon as it's finished
-func _clone_and_play(track : Node):
+func _clone_and_play(track : AudioStreamPlayer) -> AudioStreamPlayer:
 	var trk = track.duplicate()
 	get_node("OverlayRoot").add_child(trk)
 	var twe = Tween.new()
@@ -185,11 +185,11 @@ func _clone_and_play(track : Node):
 	return trk
 
 
-func _get_song_index(song_name : String):
+func _get_song_index(song_name : String) -> int:
 	return get_node(song_name).get_index()
 
 
-func _get_track_index(song_index : int, track_name : String):
+func _get_track_index(song_index : int, track_name : String) -> int:
 	return songs[song_index]._get_core().get_node(track_name).get_index()
 
 
@@ -668,7 +668,7 @@ func _beat():
 
 
 # gets a random track from a Container and returns it
-func _get_rantrk(container : Node):
+func _get_rantrk(container : Node) -> AudioStreamPlayer:
 	var chance = randi() % container.get_child_count()
 	var rantrk = container.get_child(chance)
 	return rantrk

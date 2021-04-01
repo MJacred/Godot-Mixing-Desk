@@ -23,6 +23,7 @@ Requirements
 ------------
 
 * on import of audio files, disable `loop`
+* fully define your `Song` nodes: tempo, bars, beats in bars, transition beats
 
 
 Limitations
@@ -115,11 +116,11 @@ func play(song_name : String)
 ```gdscript
 # returns an empty String, if no Song is initialized.
 # call song_is_playing() to check if song is actually playing.
-func get_current_song_name()
+func get_current_song_name() -> String
 ```
 
 ```gdscript
-func song_is_playing()
+func song_is_playing() -> bool
 ```
 
 ```gdscript
