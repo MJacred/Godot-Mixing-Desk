@@ -1,5 +1,7 @@
 extends Node
 
+class_name Song
+
 #internal vars
 var fading_out : bool = false
 var fading_in : bool = false

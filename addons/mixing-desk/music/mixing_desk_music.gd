@@ -1,5 +1,7 @@
 extends Node
 
+class_name MixingDeskMusic
+
 # Note: usually, we clone a track before we play it (and then delete after it finishes),
 # except for rollover, concat, autofade and autolayer
 
@@ -146,16 +148,18 @@ func _init_song(song_index : int):
 			rollover = null
 
 
-# returns an empty String, if no Song is initialized.
-# call song_is_playing() to check if song is actually playing.
-func get_current_song_name() -> String:
-	if current_song_index < 0 || current_song_index >= songs.size():
-		return ""
+# returns false if given song is not playing.
+# also returns false, if given song is unknown.
+func song_is_playing(song_name : String) -> bool:
+	if index < 0 || index >= songs.size():
+		return false
 
-	return songs[current_song_index].name
+	var song_index = _get_song_index(song_name)
+
+	return song_index == current_song_index
 
 
-func song_is_playing() -> bool:
+func is_playing() -> bool:
 	return playing
 
 
@@ -189,6 +193,26 @@ func _clone_and_play(track : AudioStreamPlayer) -> AudioStreamPlayer:
 
 func _get_song_index(song_name : String) -> int:
 	return get_node(song_name).get_index()
+
+
+func get_song(index : int) -> Song:
+	if index < 0 || index >= songs.size()
+		return null
+
+	return songs[index]
+
+
+func get_current_song() -> Song:
+	return songs[current_song_index]
+
+
+# returns an empty String, if no Song is initialized.
+# call song_is_playing() or is_playing() to check if song is actually playing.
+func get_current_song_name() -> String:
+	if current_song_index < 0 || current_song_index >= songs.size():
+		return ""
+
+	return songs[current_song_index].name
 
 
 func _get_track_index(song_index : int, track_name : String) -> int:
@@ -284,7 +308,7 @@ func _concat_fin(concat : Node):
 	_play_concat(concat)
 
 
-# slowly bring in the specified track.
+# slowly bring in the specified track of specified song.
 # fadein uses: Tween.TRANS_QUAD, Tween.EASE_OUT
 # automatically unmutes track
 func fade_in(song_name : String, track_name : String):
