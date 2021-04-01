@@ -106,7 +106,8 @@ Functions
 ```gdscript
 # loads a song and gets ready to play.
 # if you called `mute()`, now it will be applied.
-func init_song(song_name : String)
+# returns false if initialization failed
+func init_song(song_name : String) -> bool
 ```
 
 ```gdscript
@@ -115,12 +116,17 @@ func play(song_name : String)
 ```
 
 ```gdscript
-func get_current_song() -> Song
+func get_current_song()
+```
+
+```gdscript
+func get_song(song_name : String)
 ```
 
 ```gdscript
 # returns an empty String, if no Song is initialized.
 # call song_is_playing() or is_playing() to check if song is actually playing.
+# returns an empty string if no song is currently initialized
 func get_current_song_name() -> String
 ```
 
@@ -136,7 +142,8 @@ func song_is_playing(song_name : String) -> bool
 
 ```gdscript
 # initialize and play the song immediately
-func quickplay(song_name : String)
+# returns false if starting to play failed
+func quickplay(song_name : String) -> bool
 ```
 
 ```gdscript
@@ -149,29 +156,34 @@ func change_song(song_name : String)
 ```gdscript
 # start a song with only one track playing in default volume.
 # the others are muted, but are also running
-func play_with_solo_opening(song_name : String, track_name : String)
+# returns false if starting to play failed
+func play_with_solo_opening(song_name : String, track_name : String) -> bool
 ```
 
 ```gdscript
 # slowly bring in the specified track
 # fadein uses: Tween.TRANS_QUAD, Tween.EASE_OUT
-func fade_in(song_name : String, track_name : String)
+# returns false if setting up fadeout failed
+func fade_in(song_name : String, track_name : String) -> bool
 ```
 
 ```gdscript
 # slowly take out the specified track
 # fadeout uses: Tween.TRANS_SINE, Tween.EASE_OUT
-func fade_out(song_name : String, track_name : String)
+# returns false if setting up fadein failed
+func fade_out(song_name : String, track_name : String) -> false
 ```
 
 ```gdscript
 # mute all tracks via fadeout, except for specified track
-func fadeout_to_solo(song_name : String, track_name : String)
+# returns false if setting up fadeout failed
+func fadeout_to_solo(song_name : String, track_name : String) -> bool
 ```
 
 ```gdscript
 # mute all tracks above specified track
-func fadeout_above_track(song_name : String, track_name : String)
+# returns false if setting up fadeout failed (fails automatically, if there are only 2 tracks)
+func fadeout_above_track(song_name : String, track_name : String) -> bool
 ```
 
 ```gdscript

@@ -106,10 +106,15 @@ func _process(delta : float):
 
 # loads a song and gets ready to play.
 # if you called `mute()`, now it will be applied.
+# returns false if initialization failed
 # resets `repeats` to `0`
-func init_song(song_name : String):
+func init_song(song_name : String) -> bool:
 	var song_index = _get_song_index(song_name)
+	if song_index == -1:
+		return false
+
 	_init_song(song_index)
+	return true
 
 
 func _init_song(song_index : int):
@@ -151,10 +156,9 @@ func _init_song(song_index : int):
 # returns false if given song is not playing.
 # also returns false, if given song is unknown.
 func song_is_playing(song_name : String) -> bool:
-	if index < 0 || index >= songs.size():
-		return false
-
 	var song_index = _get_song_index(song_name)
+	if song_index == -1:
+		return false
 
 	return song_index == current_song_index
 
@@ -165,9 +169,15 @@ func is_playing() -> bool:
 
 # start a song with only one track playing in default volume.
 # the others are muted, but are also running
-func play_with_solo_opening(song_name : String, track_name : String):
+# returns false if starting to play failed
+func play_with_solo_opening(song_name : String, track_name : String) -> bool:
 	var song_index = _get_song_index(song_name)
+	if song_index == -1:
+		return false
+
 	var track_index = _get_track_index(song_index, track_name)
+	if track_index == -1:
+		return false
 
 	# TODO: check against _init_song(), some logic is missing
 
@@ -177,6 +187,7 @@ func play_with_solo_opening(song_name : String, track_name : String):
 		track.set_volume_db(-60.0)
 	current_song_core_container.get_child(track_index).set_volume_db(default_decibel)
 	_play(song_index)
+	return true
 
 
 # copy given track, play, then remove it as soon as it's finished
@@ -192,22 +203,28 @@ func _clone_and_play(track : AudioStreamPlayer) -> AudioStreamPlayer:
 
 
 func _get_song_index(song_name : String) -> int:
-	return get_node(song_name).get_index()
+	var song_node = get_node(song_name)
+	if song_node == null:
+		return -1
+
+	return song_node.get_index()
 
 
-func get_song(index : int) -> Song:
-	if index < 0 || index >= songs.size()
+func get_song(song_name : String):
+	var song_index = _get_song_index(song_name)
+	if song_index == -1:
 		return null
 
-	return songs[index]
+	return songs[song_index]
 
 
-func get_current_song() -> Song:
+func get_current_song():
 	return songs[current_song_index]
 
 
 # returns an empty String, if no Song is initialized.
 # call song_is_playing() or is_playing() to check if song is actually playing.
+# returns an empty string if no song is currently initialized
 func get_current_song_name() -> String:
 	if current_song_index < 0 || current_song_index >= songs.size():
 		return ""
@@ -216,13 +233,22 @@ func get_current_song_name() -> String:
 
 
 func _get_track_index(song_index : int, track_name : String) -> int:
-	return songs[song_index]._get_core().get_node(track_name).get_index()
+	var track_node = songs[song_index]._get_core().get_node(track_name)
+
+	if track_node == null:
+		return -1
+
+	return track_node.get_index()
 
 
 # play a song
-func play(song_name : String):
+func play(song_name : String) -> bool:
 	var song_index = _get_song_index(song_name)
+	if song_index == -1:
+		return false
+
 	_play(song_index)
+	return true
 
 
 func _play(song_index : int):
@@ -252,9 +278,12 @@ func _play(song_index : int):
 
 
 # initialize and play the song immediately
-func quickplay(song_name : String):
-	init_song(song_name)
-	play(song_name)
+func quickplay(song_name : String) -> bool:
+	var initialized = init_song(song_name)
+	if !initialized:
+		return false
+
+	return play(song_name)
 
 
 # sets bar and beat transitions to FALSE.
@@ -311,10 +340,17 @@ func _concat_fin(concat : Node):
 # slowly bring in the specified track of specified song.
 # fadein uses: Tween.TRANS_QUAD, Tween.EASE_OUT
 # automatically unmutes track
-func fade_in(song_name : String, track_name : String):
+func fade_in(song_name : String, track_name : String) -> bool:
 	var song_index = _get_song_index(song_name)
+	if song_index == -1:
+		return false
+
 	var track_index = _get_track_index(song_index, track_name)
+	if track_index == -1:
+		return false
+
 	_fade_in(song_index, track_index)
+	return true
 
 
 func _fade_in(song_index : int, track_index : int):
@@ -336,10 +372,17 @@ func _fade_in(song_index : int, track_index : int):
 
 # slowly take out the specified track
 # fadeout uses: Tween.TRANS_SINE, Tween.EASE_OUT
-func fade_out(song_name : String, track_name : String):
+func fade_out(song_name : String, track_name : String) -> bool:
 	var song_index = _get_song_index(song_name)
+	if song_index == -1:
+		return false
+
 	var track_index = _get_track_index(song_index, track_name)
+	if track_index == -1:
+		return false
+
 	_fade_out(song_index, track_index)
+	return true
 
 
 func _fade_out(song_index : int, track_index : int):
@@ -365,43 +408,57 @@ func _mute_fadedout(object : Object, key : NodePath, song_index : String, track_
 
 
 # mute all tracks via fadeout, except for specified track
-func fadeout_to_solo(song_name : String, track_name : String):
+func fadeout_to_solo(song_name : String, track_name : String) -> bool:
 	var song_index = _get_song_index(song_name)
+	if song_index == -1:
+		return false
+
 	var track_index = _get_track_index(song_index, track_name)
+	if track_index == -1:
+		return false
 
 	for track_iter in range(0, songs[song_index]._get_core().get_child_count()):
 		if track_iter != track_index:
 			_fade_out(song_index, track_iter)
+	
+	return true
 
 
 # mute all tracks above specified track
-func fadeout_above_track(song_name : String, track_name : String):
+# returns false if setting up fadeout failed (fails automatically, if there are only 2 tracks)
+func fadeout_above_track(song_name : String, track_name : String) -> bool:
 	var song_index = _get_song_index(song_name)
+	if song_index == -1:
+		return false
+
 	var track_count = songs[song_index]._get_core().get_child_count()
 
 	if track_count < 2:
-		return
+		return false
 
 	var track_index = _get_track_index(song_index, track_name)
-
-	if track_index >= (track_count - 1):
-		return
+	if track_index == -1:
+		return false
 
 	for i in range(track_index + 1, track_count):
 		_fade_out(song_index, i)
+
+	return true
 
 
 # mute all tracks below specified track
 func fadeout_below_track(song_name : String, track_name : String):
 	var song_index = _get_song_index(song_name)
+	if song_index == -1:
+		return
+
 	var track_count = songs[song_index]._get_core().get_child_count()
 
 	if track_count < 2:
 		return
 
 	var track_index = _get_track_index(song_index, track_name)
-
-	if track_index <= 0:
+	if track_index == -1:
 		return
 
 	for i in range(0, track_index):
@@ -411,14 +468,16 @@ func fadeout_below_track(song_name : String, track_name : String):
 # unmute all tracks above specified track
 func fadein_above_track(song_name : String, track_name : String):
 	var song_index = _get_song_index(song_name)
+	if song_index == -1:
+		return
+
 	var track_count = songs[song_index]._get_core().get_child_count()
 
 	if track_count < 2:
 		return
 
 	var track_index = _get_track_index(song_index, track_name)
-
-	if track_index >= (track_count - 1):
+	if track_index == -1:
 		return
 
 	for i in range(track_index + 1, track_count):
@@ -428,14 +487,16 @@ func fadein_above_track(song_name : String, track_name : String):
 # unmute all tracks below specified track
 func fadein_below_track(song_name : String, track_name : String):
 	var song_index = _get_song_index(song_name)
+	if song_index == -1:
+		return
+
 	var track_count = songs[song_index]._get_core().get_child_count()
 
 	if track_count < 2:
 		return
 
 	var track_index = _get_track_index(song_index, track_name)
-
-	if track_index <= 0:
+	if track_index == -1:
 		return
 
 	for i in range(0, track_index):
@@ -445,6 +506,9 @@ func fadein_below_track(song_name : String, track_name : String):
 # mute only the specified track in CoreContainer
 func mute(song_name : String, track_name : String):
 	var song_index = _get_song_index(song_name)
+	if song_index == -1:
+		return
+
 	_mute(song_index, track_name)
 
 
@@ -456,6 +520,9 @@ func _mute(song_index : int, track_name : String):
 	# mute currently NOT playing tracks
 	# so in case they are used again BEFORE the tween finished: the next run won't be in full volume
 	var track_index = _get_track_index(song_index, track_name)
+	if track_index == -1:
+		return
+
 	var track = songs[song_index]._get_core().get_child(track_index)
 	track.set_volume_db(-60.0)
 	var pos = songs[song_index].muted_tracks.find(track_index)
@@ -466,6 +533,9 @@ func _mute(song_index : int, track_name : String):
 # unmute only the specified track in CoreContainer
 func unmute(song_name : String, track_name : String):
 	var song_index = _get_song_index(song_name)
+	if song_index == -1:
+		return
+
 	_unmute(song_index, track_name)
 
 
@@ -477,6 +547,9 @@ func _unmute(song_index : int, track_name : String):
 	# unmute currently NOT playing tracks
 	# so in case they are used again BEFORE the tween finished: the next run will be in full volume
 	var track_index = _get_track_index(song_index, track_name)
+	if track_index == -1:
+		return
+
 	var track = songs[song_index]._get_core().get_child(track_index)
 	track.set_volume_db(default_decibel)
 	var pos = songs[song_index].muted_tracks.find(track_index)
@@ -487,11 +560,17 @@ func _unmute(song_index : int, track_name : String):
 # mutes a track if not mutes, or vice versa
 func toggle_mute(song_name : String, track_name : String):
 	var song_index = _get_song_index(song_name)
+	if song_index == -1:
+		return
+
 	_toggle_mute(song_index, track_name)
 
 
 func _toggle_mute(song_index : int, track_name : String):
 	var track_index = _get_track_index(song_index, track_name)
+	if track_index == -1:
+		return
+
 	var track = songs[song_index]._get_core().get_child(track_index)
 	if track.volume_db < 0:
 		_unmute(song_index, track_name)
@@ -502,11 +581,17 @@ func _toggle_mute(song_index : int, track_name : String):
 # fades a track in if silent, fades out if not
 func toggle_fade(song_name : String, track_name : String):
 	var song_index = _get_song_index(song_name)
+	if song_index == -1:
+		return
+
 	_toggle_fade(song_index, track_name)
 
 
 func _toggle_fade(song_index : int, track_name : String):
 	var track_index = _get_track_index(song_index, track_name)
+	if track_index == -1:
+		return
+
 	var track = songs[song_index]._get_core().get_child(track_index)
 	if track.volume_db < 0:
 		_fade_in(song_index, track_index)
@@ -517,6 +602,9 @@ func _toggle_fade(song_index : int, track_name : String):
 # change to the specified song at the next bar
 func queue_bar_transition(song_name : String):
 	var song_index = _get_song_index(song_name)
+	if song_index == -1:
+		return
+
 	old_song_index = current_song_index
 	songs[old_song_index].fading_out = true
 	new_song_index = song_index
@@ -526,6 +614,9 @@ func queue_bar_transition(song_name : String):
 # change to the specified song at the next beat
 func queue_beat_transition(song_name : String):
 	var song_index = _get_song_index(song_name)
+	if song_index == -1:
+		return
+
 	old_song_index = current_song_index
 	songs[old_song_index].fading_out = true
 	new_song_index = song_index
@@ -560,6 +651,9 @@ func queue_sequence(sequence : Array, type : String, on_end : String):
 # not another track of the old Song's RolloverContainer will be played
 func change_song(song_name : String):
 	var song_index = _get_song_index(song_name)
+	if song_index == -1:
+		return
+
 	_change_song(song_index)
 
 
@@ -600,6 +694,9 @@ func _track_faded(object : Object, key : NodePath, track : Node):
 # TODO: add option to stop immediately
 func stop(song_name : String):
 	var song_index = _get_song_index(song_name)
+	if song_index == -1:
+		return
+
 	if playing:
 		playing = false
 		for track in songs[song_index]._get_core().get_children():
@@ -686,7 +783,7 @@ func _beat():
 		if rollover.get_child_count() > 1:
 			var roll = rollover.get_child(randi() % rollover.get_child_count())
 			roll.play()
-		else:
+		elif rollover.get_child_count() == 1: # safety-measure
 			rollover.get_child(0).play()
 
 	if beat == (bars*beats_in_bar + 1):
