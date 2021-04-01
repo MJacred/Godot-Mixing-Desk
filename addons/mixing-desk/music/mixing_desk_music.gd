@@ -117,10 +117,12 @@ func _init_song(song_index : int):
 
 	repeats = 0
 
-	# disable fadeout of given song and stop tweens of all tracks
+	# cleanup safety-measure:
+	# * disable fadeout of new song and
+	# * stop tweens of all tracks
 	for track in current_song_core_container.get_children():
 		if song.fading_out:
-			track.get_child(0).stop(track) # stop the tween
+			track.get_child(0).stop(track)
 			song.fading_out = false
 		track.set_volume_db(default_decibel)
 
@@ -283,6 +285,7 @@ func _concat_fin(concat : Node):
 
 
 # slowly bring in the specified track.
+# fadein uses: Tween.TRANS_QUAD, Tween.EASE_OUT
 # automatically unmutes track
 func fade_in(song_name : String, track_name : String):
 	var song_index = _get_song_index(song_name)
@@ -308,6 +311,7 @@ func _fade_in(song_index : int, track_index : int):
 
 
 # slowly take out the specified track
+# fadeout uses: Tween.TRANS_SINE, Tween.EASE_OUT
 func fade_out(song_name : String, track_name : String):
 	var song_index = _get_song_index(song_name)
 	var track_index = _get_track_index(song_index, track_name)
@@ -629,8 +633,8 @@ func _bar():
 	if !bar_is_locked: # prevent multi-call in the same game-loop
 		bar_is_locked = true
 		if bar_tran:
-			if current_song_index != new_song_index: # play new song in next bar
-				_change_song(new_song_index)
+			if current_song_index != new_song_index:
+				_change_song(new_song_index)  # triggering transition on bar
 			else: # play same song from the start in the next bar
 				_play(new_song_index)
 		yield(get_tree().create_timer(0.5), "timeout")
@@ -642,7 +646,7 @@ func _bar():
 func _beat():
 	if beat_tran:
 		if current_song_index != new_song_index:
-			_change_song(new_song_index)
+			_change_song(new_song_index) # triggering transition on beat
 		else:
 			_play(new_song_index)
 
